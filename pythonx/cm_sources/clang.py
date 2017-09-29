@@ -97,18 +97,44 @@ class Source(Base):
             except Exception as ex:
                 logger.exception("failed parsing completion: %s", line)
 
+        logger.debug("startcol: %s, matches: %s", startcol, matches)
+
         self.complete(info, ctx, startcol, matches)
 
     def parse_completion(self, line):
         m = re.search(r'^COMPLETION:\s+([\w~&=!*/_]+)(\s+:\s+(.*)$)?', line)
         word = m.group(1)
+
         menu = ''
+        snippet = ''
+        is_snippet = False
+        snippet_num = 0
+
         if m.group(3):
             # [#double#]copysign(<#double __x#>, <#double __y#>)
             more = m.group(3)
             menu = re.sub(r'\[#([^#]+)#\]', r'\1 ', more)
             menu = re.sub(r'\<#([^#]+)#\>', r'\1', menu)
-        return dict(word=word, menu=menu)
+
+            def rep(m):
+                nonlocal is_snippet
+                nonlocal snippet_num
+                is_snippet = True
+                snippet_num += 1
+                name = m.group(1)
+                last_word =re.search('([\w_]+)$', name)
+                if last_word:
+                    name = last_word.group(1)
+                return self.snippet_placeholder(snippet_num, name)
+
+            # remove type
+            snippet = re.sub(r'\[#([^#]+)#\]', r'', more)
+            snippet = re.sub(r'\<#([^#]+)#\>', rep, snippet)
+
+        if is_snippet:
+            return dict(word=word, menu=menu, snippet=snippet)
+        else:
+            return dict(word=word, menu=menu)
 
     def get_cmake_args(self, filepath, filedir, cwd):
 
