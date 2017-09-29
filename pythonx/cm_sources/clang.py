@@ -16,13 +16,32 @@ register_source(name='clang',
                 scoping=True,
                 scopes=['cpp'],
                 early_cache=1,
-                cm_refresh_patterns=[r'-\>', r'::'],)
+                cm_refresh_patterns=[r'-\>', r'::', r'\.'],)
 
 import subprocess
 import re
+import shlex
+from os import path
+import json
 
 logger = getLogger(__name__)
 
+def find_config(bases, name):
+    from pathlib import Path
+
+    if type(bases) == type(""):
+        bases = [bases]
+
+    for base in bases:
+        r = Path(base).resolve()
+        dirs = [r] + list(r.parents)
+        for d in dirs:
+            d = str(d)
+            p = path.join(d, name)
+            if path.isfile(p):
+                return p
+
+    return None
 
 class Source(Base):
 
@@ -38,14 +57,31 @@ class Source(Base):
         col = ctx['col']
         filepath = ctx['filepath']
         startcol = ctx['startcol']
+        cwd = cwd=self.nvim.eval('getcwd()')
+        filedir = path.dirname(filepath)
+
+        run_dir = cwd
 
         args = [ self._clang_path,
                 '-x', 'c++',
                 '-fsyntax-only',
                 '-Xclang', '-code-completion-macros',
                 '-Xclang', '-code-completion-at={}:{}:{}'.format('-', lnum, col),
-                '-'
+                '-',
+                '-I', filedir
                 ]
+
+        
+        cmake_args, directory = self.get_cmake_args(filepath, filedir, cwd)
+        if cmake_args is not None:
+            args += cmake_args
+            run_dir = directory
+        else:
+            clang_complete_args, directory = self.get_clang_complete_args(filedir, cwd)
+            if clang_complete_args:
+                args += clang_complete_args
+                run_dir = directory
+
         # args = args + self._clang_opts
         logger.debug("args: %s", args)
 
@@ -53,7 +89,7 @@ class Source(Base):
                                 stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.DEVNULL,
-                                cwd=self.nvim.eval('getcwd()'))
+                                cwd=run_dir)
 
         result, errs = proc.communicate(src, timeout=30)
 
@@ -69,9 +105,52 @@ class Source(Base):
             if not line.startswith("COMPLETION: "):
                 continue
 
-            m = re.search('^COMPLETION: (\w+)', line)
+            m = re.search(r'^COMPLETION: ([\w~]+)', line)
 
             word = m.group(1)
             matches.append(word)
 
         self.complete(info, ctx, startcol, matches)
+
+    
+    def get_cmake_args(self, filepath, filedir, cwd):
+
+        compile_commands = find_config([filedir, cwd], 'compile_commands.json')
+        if not compile_commands:
+            compile_commands = find_config([filedir, cwd], 'build/compile_commands.json')
+
+        if not compile_commands:
+            return None, None
+
+        try:
+            with open (compile_commands, "r") as f:
+                txt = f.read()
+                commands = json.loads(txt)
+                for cmd in commands:
+                    if cmd['file'] == filepath:
+                        logger.info("compile_commands: %s", cmd)
+                        return shlex.split(cmd['command'])[1:-1], cmd['directory']
+                logger.error("Failed finding args from %s for %s", compile_commands, filepath)
+        except Exception as ex:
+            logger.exception("read %s failed.", compile_commands)
+
+        return None, None
+
+
+    def get_clang_complete_args(self, filedir, cwd):
+
+        clang_complete = find_config([filedir, cwd], '.clang_complete')
+
+        if not clang_complete:
+            return None, None
+
+        try:
+            with open (clang_complete, "r") as f:
+                clang_complete_args = shlex.split(" ".join(f.readlines()))
+                logger.info('.clang_complete args: %s', clang_complete_args)
+                return clang_complete_args, path.dirname(clang_complete)
+        except Exception as ex:
+            logger.exception("read config file %s failed.", clang_complete)
+
+        return None, None
+
