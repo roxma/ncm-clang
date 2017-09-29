@@ -26,22 +26,6 @@ import json
 
 logger = getLogger(__name__)
 
-def find_config(bases, name):
-    from pathlib import Path
-
-    if type(bases) == type(""):
-        bases = [bases]
-
-    for base in bases:
-        r = Path(base).resolve()
-        dirs = [r] + list(r.parents)
-        for d in dirs:
-            d = str(d)
-            p = path.join(d, name)
-            if path.isfile(p):
-                return p
-
-    return None
 
 class Source(Base):
 
@@ -66,12 +50,14 @@ class Source(Base):
                 '-x', 'c++',
                 '-fsyntax-only',
                 '-Xclang', '-code-completion-macros',
+                # '-Xclang', '-code-completion-brief-comments',
+                # Perfer external snippets instead of -code-completion-patterns
+                # '-Xclang', '-code-completion-patterns',
                 '-Xclang', '-code-completion-at={}:{}:{}'.format('-', lnum, col),
                 '-',
                 '-I', filedir
                 ]
 
-        
         cmake_args, directory = self.get_cmake_args(filepath, filedir, cwd)
         if cmake_args is not None:
             args += cmake_args
@@ -104,15 +90,26 @@ class Source(Base):
             # COMPLETION: terminate : [#void#]terminate()
             if not line.startswith("COMPLETION: "):
                 continue
-
-            m = re.search(r'^COMPLETION: ([\w~]+)', line)
-
-            word = m.group(1)
-            matches.append(word)
+            
+            try:
+                m = self.parse_completion(line)
+                matches.append(m)
+            except Exception as ex:
+                logger.exception("failed parsing completion: %s", line)
 
         self.complete(info, ctx, startcol, matches)
 
-    
+    def parse_completion(self, line):
+        m = re.search(r'^COMPLETION:\s+([\w~&=!*/_]+)(\s+:\s+(.*)$)?', line)
+        word = m.group(1)
+        menu = ''
+        if m.group(3):
+            # [#double#]copysign(<#double __x#>, <#double __y#>)
+            more = m.group(3)
+            menu = re.sub(r'\[#([^#]+)#\]', r'\1 ', more)
+            menu = re.sub(r'\<#([^#]+)#\>', r'\1', menu)
+        return dict(word=word, menu=menu)
+
     def get_cmake_args(self, filepath, filedir, cwd):
 
         compile_commands = find_config([filedir, cwd], 'compile_commands.json')
@@ -153,4 +150,21 @@ class Source(Base):
             logger.exception("read config file %s failed.", clang_complete)
 
         return None, None
+
+def find_config(bases, name):
+    from pathlib import Path
+
+    if type(bases) == type(""):
+        bases = [bases]
+
+    for base in bases:
+        r = Path(base).resolve()
+        dirs = [r] + list(r.parents)
+        for d in dirs:
+            d = str(d)
+            p = path.join(d, name)
+            if path.isfile(p):
+                return p
+
+    return None
 
