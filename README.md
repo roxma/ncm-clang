@@ -69,5 +69,5 @@ The following vimrc shows how to work with [w0rp/ale](https://github.com/w0rp/al
     let g:ale_linters = {
         \   'cpp': ['clang'],
         \}
-    autocmd BufEnter *.cpp let g:ale_cpp_clang_options = join(ncm_clang#compilation_info()['args'], ' ')
+    autocmd BufEnter *.cpp,*.h,*.hpp,*.hxx let g:ale_cpp_clang_options = join(ncm_clang#compilation_info()['args'], ' ')
 ```
