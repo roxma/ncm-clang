@@ -124,6 +124,10 @@ class Source(Base):
             menu = menu.replace('{#', '[')
             menu = menu.replace('#}', ']')
 
+            # function without parameter
+            if more.endswith('()'):
+                is_snippet = True
+
             def rep(m):
                 nonlocal is_snippet
                 nonlocal snippet_num
