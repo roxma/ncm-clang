@@ -3,7 +3,7 @@
 clang completion integration for
 [nvim-completion-manager](https://github.com/roxma/nvim-completion-manager)
 
-![ncm-clang](https://user-images.githubusercontent.com/4538941/31041498-0d096e28-a5c9-11e7-9a38-41bd818499fb.gif)
+![ncm-clang](https://user-images.githubusercontent.com/4538941/31041531-abd4a536-a5c9-11e7-9fbc-cbac0651089d.gif)
 
 This plugin only support completion, for go to declaration support, and
 others, you could try , for example,
