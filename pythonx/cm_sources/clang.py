@@ -14,7 +14,7 @@ register_source(name='clang',
                 priority=9,
                 abbreviation='',
                 scoping=True,
-                scopes=['cpp'],
+                scopes=['cpp', 'c'],
                 early_cache=1,
                 cm_refresh_patterns=[r'-\>', r'::', r'\.'],)
 
@@ -32,7 +32,7 @@ class Source(Base):
     def __init__(self, nvim):
         super(Source, self).__init__(nvim)
 
-        self._clang_path = 'clang++'
+        self._clang_path = 'clang'
 
     def cm_refresh(self, info, ctx, *args):
 
@@ -44,10 +44,16 @@ class Source(Base):
         cwd = cwd=self.nvim.eval('getcwd()')
         filedir = path.dirname(filepath)
 
+        scope = ctx['scope']
+        if scope=='cpp':
+            lang = 'c++'
+        else:
+            lang = 'c'
+
         run_dir = cwd
 
         args = [ self._clang_path,
-                '-x', 'c++',
+                '-x', lang,
                 '-fsyntax-only',
                 '-Xclang', '-code-completion-macros',
                 # '-Xclang', '-code-completion-brief-comments',
