@@ -7,7 +7,7 @@ clang completion integration for
 
 This plugin only support completion, for go to declaration support, and
 others, you could try , for example,
-[vim-clang](https://github.com/justmao945/vim-clang)
+[osyo-manga/vim-snowdrop](https://github.com/osyo-manga/vim-snowdrop)
 
 ## Requirements
 
@@ -28,4 +28,26 @@ If you're using cmake, add `set(CMAKE_EXPORT_COMPILE_COMMANDS, 1)` into
 
 If your project is not using cmake, store the compile flags into a file named
 `.clang_complete`.
+
+## Utilities
+
+This example shows how to auto detect compilation falgs for vim-snowdrop.
+
+```vim
+func DetectConfig()
+    py3 << EOF
+import vim
+import ncm_clang
+filepath = vim.eval("expand('%:p')")
+cwd = vim.eval("getcwd()")
+args, _ = ncm_clang.args_from_cmake(filepath, cwd)
+if not args:
+    args, _ = ncm_clang.args_from_clang_complete(filepath, cwd)
+vim.vars['snowdrop#command_options'] = {
+    'cpp': " ".join(args)
+}
+EOF
+endfunc
+autocmd FileType cpp,c call DetectConfig()
+```
 
