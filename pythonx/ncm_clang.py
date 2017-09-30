@@ -24,7 +24,28 @@ def args_from_cmake(filepath, cwd):
                 if cmd['file'] == filepath:
                     logger.info("compile_commands: %s", cmd)
                     return shlex.split(cmd['command'])[1:-1], cmd['directory']
+
             logger.error("Failed finding args from %s for %s", compile_commands, filepath)
+
+            # Merge all include dirs and the flags of the last item as a
+            # fallback. This is useful for editting header file.
+            all_dirs = {}
+            args = []
+            for cmd in commands:
+                args = shlex.split(cmd['command'])[1:-1]
+                add_next = False
+                for arg in args:
+                    if add_next:
+                        add_next = False
+                        all_dirs['-I' + arg] = True
+                    if arg == "-I":
+                        add_next = True
+                        continue
+                    if arg.startswith("-I"):
+                        all_dirs['-I' + arg[2:]] = True
+
+            return list(all_dirs.keys()) + args, filedir
+
     except Exception as ex:
         logger.exception("read %s failed.", compile_commands)
 
