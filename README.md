@@ -62,3 +62,12 @@ declaration feature.
     " map to gd key
     autocmd FileType c,cpp nnoremap <buffer> gd :call WrapClangGoTo()<CR>
 ```
+
+The following vimrc shows how to work with [w0rp/ale](https://github.com/w0rp/ale)
+
+```vim
+    let g:ale_linters = {
+        \   'cpp': ['clang'],
+        \}
+    autocmd BufEnter *.cpp let g:ale_cpp_clang_options = join(ncm_clang#compilation_info()['args'], ' ')
+```
