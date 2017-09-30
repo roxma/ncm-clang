@@ -7,3 +7,6 @@ If you're using cmake, add `set(CMAKE_EXPORT_COMPILE_COMMANDS, 1)` into
 If your project is not using cmake, store the compile flags into a file named
 `.clang_complete`.
 
+This plugin only support completion, for go to declaration support, you could
+try , for example, [vim-clang](https://github.com/justmao945/vim-clang)
+
