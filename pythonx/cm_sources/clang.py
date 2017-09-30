@@ -116,8 +116,8 @@ class Source(Base):
             menu = re.sub(r'\[#([^#]+)#\]', r'\1 ', more)
             menu = menu.replace('<#', '')
             menu = menu.replace('#>', '')
-            menu = menu.replace('{#', '')
-            menu = menu.replace('#}', '')
+            menu = menu.replace('{#', '[')
+            menu = menu.replace('#}', ']')
 
             def rep(m):
                 nonlocal is_snippet
