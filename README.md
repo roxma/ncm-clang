@@ -44,7 +44,7 @@ args, _ = ncm_clang.args_from_cmake(filepath, cwd)
 if not args:
     args, _ = ncm_clang.args_from_clang_complete(filepath, cwd)
 vim.vars['snowdrop#command_options'] = {
-    'cpp': " ".join(args)
+    'cpp': " ".join(args or [])
 }
 EOF
 endfunc
