@@ -114,7 +114,10 @@ class Source(Base):
             # [#double#]copysign(<#double __x#>, <#double __y#>)
             more = m.group(3)
             menu = re.sub(r'\[#([^#]+)#\]', r'\1 ', more)
-            menu = re.sub(r'\<#([^#]+)#\>', r'\1', menu)
+            menu = menu.replace('<#', '')
+            menu = menu.replace('#>', '')
+            menu = menu.replace('{#', '')
+            menu = menu.replace('#}', '')
 
             def rep(m):
                 nonlocal is_snippet
@@ -127,9 +130,32 @@ class Source(Base):
                     name = last_word.group(1)
                 return self.snippet_placeholder(snippet_num, name)
 
-            # remove type
             snippet = re.sub(r'\[#([^#]+)#\]', r'', more)
             snippet = re.sub(r'\<#([^#]+)#\>', rep, snippet)
+
+            begin = None
+            end = None
+            mb = re.search('\<#', more)
+            me = re.search('.*#\>', more) # greedy
+            if mb:
+                begin = mb.start()
+            if me:
+                end = mb.end()
+
+            opt_begin = None
+            opt_end = None
+            mob = re.search('\{#', more)
+            moe = re.search('.*#\}', more)
+            if mob:
+                opt_begin = mob.start()
+            if moe:
+                opt_end = moe.end()
+
+            if opt_begin:
+                if opt_begin < begin and opt_end > end:
+                    snippet = re.sub(r'\{#.*#\}', self.snippet_placeholder(1), snippet)
+                else:
+                    snippet = re.sub(r'\{#.*#\}', '', snippet)
 
         if is_snippet:
             return dict(word=word, menu=menu, snippet=snippet)
