@@ -29,3 +29,9 @@ If you're using cmake, add `set(CMAKE_EXPORT_COMPILE_COMMANDS, 1)` into
 If your project is not using cmake, store the compile flags into a file named
 `.clang_complete`.
 
+## Utilities
+
+### `ncm_clang#compilation_info()`
+
+Get compilation flags and directory for current file.
+
