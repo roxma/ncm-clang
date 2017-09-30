@@ -6,18 +6,18 @@ import json
 
 logger = getLogger(__name__)
 
+
 def args_from_cmake(filepath, cwd):
     filedir = dirname(filepath)
 
-    compile_commands = find_config([filedir, cwd], 'compile_commands.json')
-    if not compile_commands:
-        compile_commands = find_config([filedir, cwd], 'build/compile_commands.json')
+    files = ['compile_commands.json', 'build/compile_commands.json']
+    cfg_path = find_config([filedir, cwd], files)
 
-    if not compile_commands:
+    if not cfg_path:
         return None, None
 
     try:
-        with open (compile_commands, "r") as f:
+        with open(cfg_path, "r") as f:
             txt = f.read()
             commands = json.loads(txt)
             for cmd in commands:
@@ -25,7 +25,7 @@ def args_from_cmake(filepath, cwd):
                     logger.info("compile_commands: %s", cmd)
                     return shlex.split(cmd['command'])[1:-1], cmd['directory']
 
-            logger.error("Failed finding args from %s for %s", compile_commands, filepath)
+            logger.error("Failed finding args from %s for %s", cfg_path, filepath)
 
             # Merge all include dirs and the flags of the last item as a
             # fallback. This is useful for editting header file.
@@ -47,7 +47,7 @@ def args_from_cmake(filepath, cwd):
             return list(all_dirs.keys()) + args, filedir
 
     except Exception as ex:
-        logger.exception("read %s failed.", compile_commands)
+        logger.exception("read compile_commands.json [%s] failed.", cfg_path)
 
     return None, None
 
@@ -61,7 +61,7 @@ def args_from_clang_complete(filepath, cwd):
         return None, None
 
     try:
-        with open (clang_complete, "r") as f:
+        with open(clang_complete, "r") as f:
             clang_complete_args = shlex.split(" ".join(f.readlines()))
             logger.info('.clang_complete args: %s', clang_complete_args)
             return clang_complete_args, dirname(clang_complete)
@@ -71,9 +71,11 @@ def args_from_clang_complete(filepath, cwd):
     return None, None
 
 
-def find_config(bases, name):
+def find_config(bases, names):
+    if isinstance(names, str):
+        names = [names]
 
-    if type(bases) == type(""):
+    if isinstance(bases, str):
         bases = [bases]
 
     for base in bases:
@@ -81,9 +83,9 @@ def find_config(bases, name):
         dirs = [r] + list(r.parents)
         for d in dirs:
             d = str(d)
-            p = join(d, name)
-            if isfile(p):
-                return p
+            for name in names:
+                p = join(d, name)
+                if isfile(p):
+                    return p
 
     return None
-
