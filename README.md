@@ -35,3 +35,30 @@ If your project is not using cmake, store the compile flags into a file named
 
 Get compilation flags and directory for current file.
 
+The following vimrc shows how to use
+[Rip-Rip/clang_complete](https://github.com/Rip-Rip/clang_complete)'s goto
+declaration feature.
+
+```vim
+    " default key mapping is annoying
+    let g:clang_make_default_keymappings = 0
+    " ncm-clang is auto detecting compile_commands.json and .clang_complete
+    " file
+    let g:clang_auto_user_options = ''
+
+    func WrapClangGoTo()
+        let cwd = getcwd()
+        let info = ncm_clang#compilation_info()
+        exec 'cd ' . info['directory']
+        try
+            let b:clang_user_options = join(info['args'], ' ')
+            call g:ClangGotoDeclaration()
+        catch
+        endtry
+        " restore
+        exec 'cd ' . cwd
+    endfunc
+
+    " map to gd key
+    autocmd FileType c,cpp nnoremap <buffer> gd :call WrapClangGoTo()<CR>
+```
