@@ -1,10 +1,20 @@
 from cm import getLogger
-from os.path import dirname, join, isfile
+from os.path import dirname, join, isfile, samefile
 from pathlib import Path
 import shlex
 import json
 
 logger = getLogger(__name__)
+
+
+def _extract_args_frmo_cmake(cmd):
+    # the last arg is filename
+    args = shlex.split(cmd)[:-1]
+    # filter for ccache
+    while args and not args[0].startswith("-"):
+        args = args[1:]
+
+    return args
 
 
 def args_from_cmake(filepath, cwd):
@@ -18,12 +28,16 @@ def args_from_cmake(filepath, cwd):
 
     try:
         with open(cfg_path, "r") as f:
-            txt = f.read()
-            commands = json.loads(txt)
+            commands = json.load(f)
+
             for cmd in commands:
-                if cmd['file'] == filepath:
-                    logger.info("compile_commands: %s", cmd)
-                    return shlex.split(cmd['command'])[1:-1], cmd['directory']
+                try:
+                    if samefile(cmd['file'], filepath):
+                        logger.info("compile_commands: %s", cmd)
+                        args = _extract_args_frmo_cmake(cmd['command'])
+                        return args, cmd['directory']
+                except Exception as ex:
+                    logger.exception("Exception processing %s", cmd)
 
             logger.error("Failed finding args from %s for %s", cfg_path, filepath)
 
@@ -32,7 +46,7 @@ def args_from_cmake(filepath, cwd):
             all_dirs = {}
             args = []
             for cmd in commands:
-                args = shlex.split(cmd['command'])[1:-1]
+                _extract_args_frmo_cmake(cmd['command'])
                 add_next = False
                 for arg in args:
                     if add_next:
