@@ -7,7 +7,7 @@ import json
 logger = getLogger(__name__)
 
 
-def _extract_args_frmo_cmake(cmd):
+def _extract_args_from_cmake(cmd):
     # the last arg is filename
     args = shlex.split(cmd)[:-1]
     # filter for ccache
@@ -32,9 +32,9 @@ def args_from_cmake(filepath, cwd):
 
             for cmd in commands:
                 try:
-                    if samefile(cmd['file'], filepath):
+                    if samefile(join(cmd['directory'], cmd['file']), filepath):
                         logger.info("compile_commands: %s", cmd)
-                        args = _extract_args_frmo_cmake(cmd['command'])
+                        args = _extract_args_from_cmake(cmd['command'])
                         return args, cmd['directory']
                 except Exception as ex:
                     logger.exception("Exception processing %s", cmd)
@@ -46,7 +46,7 @@ def args_from_cmake(filepath, cwd):
             all_dirs = {}
             args = []
             for cmd in commands:
-                _extract_args_frmo_cmake(cmd['command'])
+                _extract_args_from_cmake(cmd['command'])
                 add_next = False
                 for arg in args:
                     if add_next:
