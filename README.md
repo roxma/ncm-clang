@@ -29,6 +29,11 @@ If you're using cmake, add `set(CMAKE_EXPORT_COMPILE_COMMANDS, 1)` into
 If your project is not using cmake, store the compile flags into a file named
 `.clang_complete`.
 
+### `g:ncm_clang#database_paths`
+
+THe paths for locating `compile_commands.json`. Default is
+`['compile_commands.json', 'build/compile_commands.json']`
+
 ## Utilities
 
 ### `ncm_clang#compilation_info()`

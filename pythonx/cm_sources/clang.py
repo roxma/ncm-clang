@@ -40,7 +40,7 @@ class Source(Base):
         col = ctx['col']
         filepath = ctx['filepath']
         startcol = ctx['startcol']
-        cwd = cwd=self.nvim.eval('getcwd()')
+        cwd, database_paths = cwd=self.nvim.eval('ncm_clang#_context()')
         filedir = path.dirname(filepath)
 
         scope = ctx['scope']
@@ -63,7 +63,7 @@ class Source(Base):
                 '-I', filedir
                 ]
 
-        cmake_args, directory = args_from_cmake(filepath, cwd)
+        cmake_args, directory = args_from_cmake(filepath, cwd, database_paths)
         if cmake_args is not None:
             args += cmake_args
             run_dir = directory

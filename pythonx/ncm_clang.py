@@ -17,11 +17,10 @@ def _extract_args_from_cmake(cmd):
     return args
 
 
-def args_from_cmake(filepath, cwd):
+def args_from_cmake(filepath, cwd, database_paths):
     filedir = dirname(filepath)
 
-    files = ['compile_commands.json', 'build/compile_commands.json']
-    cfg_path = find_config([filedir, cwd], files)
+    cfg_path = find_config([filedir, cwd], database_paths)
 
     if not cfg_path:
         return None, None
