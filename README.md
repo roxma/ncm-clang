@@ -75,4 +75,8 @@ The following vimrc shows how to work with [w0rp/ale](https://github.com/w0rp/al
         \   'cpp': ['clang'],
         \}
     autocmd BufEnter *.cpp,*.h,*.hpp,*.hxx let g:ale_cpp_clang_options = join(ncm_clang#compilation_info()['args'], ' ')
+
+    " (optional, for completion performance) run linters only when I save files
+    let g:ale_lint_on_text_changed = 'never'
+    let g:ale_lint_on_enter = 0
 ```
