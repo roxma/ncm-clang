@@ -40,7 +40,9 @@ class Source(Base):
         col = ctx['col']
         filepath = ctx['filepath']
         startcol = ctx['startcol']
-        cwd, database_paths = cwd=self.nvim.eval('ncm_clang#_context()')
+        ctx2 = self.nvim.eval('ncm_clang#_context()')
+        cwd = ctx2['cwd']
+        database_paths = ctx2['database_paths']
         filedir = path.dirname(filepath)
 
         scope = ctx['scope']

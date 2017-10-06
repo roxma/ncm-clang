@@ -14,7 +14,9 @@ import ncm_clang
 from os import path
 filepath = vim.eval("expand('%:p')")
 filedir = path.dirname(filepath)
-cwd, database_paths = vim.eval("ncm_clang#_context()")
+ctx = vim.eval("ncm_clang#_context()")
+cwd = ctx['cwd']
+database_paths = ctx['database_paths']
 args, directory = ncm_clang.args_from_cmake(filepath, cwd, database_paths)
 if not args:
     args, directory = ncm_clang.args_from_clang_complete(filepath, cwd)
@@ -25,6 +27,6 @@ EOF
 endf
 
 func! ncm_clang#_context()
-    return  [getcwd(), g:ncm_clang#database_paths]
+    return  {'cwd': getcwd(), 'database_paths': g:ncm_clang#database_paths}
 endfunc
 
