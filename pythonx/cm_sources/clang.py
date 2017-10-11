@@ -126,6 +126,9 @@ class Source(Base):
             menu = menu.replace('{#', '[')
             menu = menu.replace('#}', ']')
 
+            if more.find('()') >= 0:
+                is_snippet = True
+
             # function without parameter
             if more.endswith('()'):
                 is_snippet = True
