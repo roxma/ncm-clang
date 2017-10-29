@@ -8,14 +8,18 @@ logger = getLogger(__name__)
 
 
 def _extract_args_from_cmake(cmd):
-    # the last arg is filename
-    args = shlex.split(cmd)[:-1]
+    args = None
+    if 'command' in cmd:
+        # the last arg is filename
+        args = shlex.split(cmd)[:-1]
+    elif 'arguments' in cmd:
+        # the last arg is filename
+        args = cmd['arguments'][:-1]
+    
     # filter for ccache
     while args and not args[0].startswith("-"):
         args = args[1:]
-
     return args
-
 
 def args_from_cmake(filepath, cwd, database_paths):
     filedir = dirname(filepath)
@@ -33,7 +37,7 @@ def args_from_cmake(filepath, cwd, database_paths):
                 try:
                     if samefile(join(cmd['directory'], cmd['file']), filepath):
                         logger.info("compile_commands: %s", cmd)
-                        args = _extract_args_from_cmake(cmd['command'])
+                        args = _extract_args_from_cmake(cmd)
                         return args, cmd['directory']
                 except Exception as ex:
                     logger.exception("Exception processing %s", cmd)
