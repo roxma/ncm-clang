@@ -11,7 +11,7 @@ def _extract_args_from_cmake(cmd):
     args = None
     if 'command' in cmd:
         # the last arg is filename
-        args = shlex.split(cmd)[:-1]
+        args = shlex.split(cmd['command'])[:-1]
     elif 'arguments' in cmd:
         # the last arg is filename
         args = cmd['arguments'][:-1]
