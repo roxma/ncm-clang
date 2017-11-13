@@ -47,9 +47,8 @@ def args_from_cmake(filepath, cwd, database_paths):
             # Merge all include dirs and the flags of the last item as a
             # fallback. This is useful for editting header file.
             all_dirs = {}
-            args = []
             for cmd in commands:
-                _extract_args_from_cmake(cmd['command'])
+                args = _extract_args_from_cmake(cmd)
                 add_next = False
                 for arg in args:
                     if add_next:
