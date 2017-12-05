@@ -1,5 +1,5 @@
 from cm import getLogger
-from os.path import dirname, join, isfile, samefile
+from os.path import dirname, join, isfile, samefile, expanduser, expandvars
 from pathlib import Path
 import shlex
 import json
@@ -78,9 +78,10 @@ def args_from_clang_complete(filepath, cwd):
 
     try:
         with open(clang_complete, "r") as f:
-            clang_complete_args = shlex.split(" ".join(f.readlines()))
-            logger.info('.clang_complete args: %s', clang_complete_args)
-            return clang_complete_args, dirname(clang_complete)
+            args = shlex.split(" ".join(f.readlines()))
+            args = [expanduser(expandvars(p)) for p in args]
+            logger.info('.clang_complete args: %s', args)
+            return args, dirname(clang_complete)
     except Exception as ex:
         logger.exception("read config file %s failed.", clang_complete)
 
