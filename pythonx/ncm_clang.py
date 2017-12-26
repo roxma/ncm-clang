@@ -7,15 +7,16 @@ import json
 logger = getLogger(__name__)
 
 
-def _extract_args_from_cmake(cmd):
+def _extract_args_from_cmake(cmd, filename):                                                                                                                                                       [50/1535]
     args = None
     if 'command' in cmd:
-        # the last arg is filename
-        args = shlex.split(cmd['command'])[:-1]
+        args = shlex.split(cmd['command'])
     elif 'arguments' in cmd:
-        # the last arg is filename
-        args = cmd['arguments'][:-1]
-    
+        args = cmd['arguments']
+
+    if filename in args:
+        args.remove(filename)
+
     # filter for ccache
     while args and not args[0].startswith("-"):
         args = args[1:]
@@ -37,7 +38,7 @@ def args_from_cmake(filepath, cwd, database_paths):
                 try:
                     if samefile(join(cmd['directory'], cmd['file']), filepath):
                         logger.info("compile_commands: %s", cmd)
-                        args = _extract_args_from_cmake(cmd)
+                        args = _extract_args_from_cmake(cmd, cmd['file'])
                         return args, cmd['directory']
                 except Exception as ex:
                     logger.exception("Exception processing %s", cmd)
@@ -48,7 +49,7 @@ def args_from_cmake(filepath, cwd, database_paths):
             # fallback. This is useful for editting header file.
             all_dirs = {}
             for cmd in commands:
-                args = _extract_args_from_cmake(cmd)
+                args = _extract_args_from_cmake(cmd, cmd['file'])
                 add_next = False
                 for arg in args:
                     if add_next:
