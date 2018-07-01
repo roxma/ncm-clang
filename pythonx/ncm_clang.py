@@ -9,9 +9,15 @@ logger = getLogger(__name__)
 
 def _extract_args_from_cmake(cmd):
     args = None
+    rsp_file = None
     if 'command' in cmd:
         # the last arg is filename
-        args = shlex.split(cmd['command'])[:-1]
+        args = cmd['command'].split(' ')[:-4]
+        while '' in args:
+            args.remove('')
+        for arg in args:
+            if arg.startswith('@CMakeFiles'):
+                rsp_file = join(cmd['directory'], arg[1:])
     elif 'arguments' in cmd:
         # the last arg is filename
         args = cmd['arguments'][:-1]
@@ -19,6 +25,9 @@ def _extract_args_from_cmake(cmd):
     # filter for ccache
     while args and not args[0].startswith("-"):
         args = args[1:]
+    if rsp_file:
+        with open(rsp_file, "r") as f:
+            args = args + f.read().strip().split(' ')
     return args
 
 def args_from_cmake(filepath, cwd, database_paths):
